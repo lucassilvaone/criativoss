@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creative Studio — Nano Banana Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0c;--surface:#111115;--surface2:#18181f;
+    --border:#1e1e28;--border2:#2a2a38;
+    --accent:#c8f060;--text:#f0f0f5;--text2:#7a7a90;--text3:#3a3a50;
+    --ok:#40e0a0;--err:#ff5566;--warn:#ffaa33;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:15px 28px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,10,12,.94);backdrop-filter:blur(16px);z-index:100}
+  .logo{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;letter-spacing:-.02em}
+  .logo-icon{width:26px;height:26px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#0a0a0c;font-weight:800}
+  .logo span{color:var(--text2);font-weight:400}
+  .key-badge{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)}
+  .key-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok)}
+
+  main{display:grid;grid-template-columns:1fr 320px;min-height:calc(100vh - 57px);position:relative;z-index:1}
+
+  .canvas{padding:28px 32px;display:flex;flex-direction:column;gap:26px;border-right:1px solid var(--border)}
+  .heading h1{font-size:20px;font-weight:800;letter-spacing:-.03em}
+  .heading h1 em{font-family:'Instrument Serif',serif;font-style:italic;color:var(--accent)}
+  .heading p{font-size:12px;color:var(--text2);margin-top:3px}
+
+  .slbl{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .slbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  .imgs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .uzone{border:1.5px dashed var(--border2);border-radius:12px;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;background:var(--surface)}
+  .uzone:hover{border-color:var(--accent);background:rgba(200,240,96,.02)}
+  .uzone.drag{border-color:var(--accent);background:rgba(200,240,96,.06)}
+  .uzone.filled{border-style:solid;border-color:var(--border2)}
+  .uzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .uph{text-align:center;padding:16px;pointer-events:none}
+  .uico{width:40px;height:40px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:18px}
+  .utitle{font-size:12px;font-weight:600;margin-bottom:3px}
+  .usub{font-size:10px;color:var(--text2);line-height:1.5}
+  .ubadge{position:absolute;top:8px;left:8px;background:rgba(10,10,12,.85);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;font-size:9px;font-family:'DM Mono',monospace;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;pointer-events:none;z-index:10}
+  .prev{width:100%;height:180px;object-fit:cover;border-radius:10px;display:block}
+  .clrbtn{position:absolute;top:8px;right:8px;width:22px;height:22px;background:rgba(10,10,12,.85);border:1px solid var(--border2);border-radius:5px;color:var(--text2);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:all .2s}
+  .clrbtn:hover{background:var(--err);color:#fff;border-color:var(--err)}
+
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+  .chip{padding:5px 12px;border-radius:100px;border:1px solid var(--border2);background:var(--surface);font-size:11px;color:var(--text2);cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace}
+  .chip.on{border-color:var(--accent);background:rgba(200,240,96,.08);color:var(--accent)}
+
+  .ta{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;resize:vertical;min-height:100px;outline:none;transition:border-color .2s}
+  .ta:focus{border-color:var(--accent)}
+  .ta::placeholder{color:var(--text3)}
+
+  .pbox{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);line-height:1.7;min-height:56px;max-height:120px;overflow-y:auto;word-break:break-word}
+  .pbox .hi{color:var(--accent)}
+
+  .panel{padding:22px 20px;display:flex;flex-direction:column;gap:18px;background:var(--surface)}
+  .slbl2{font-size:10px;font-family:'DM Mono',monospace;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}
+  .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .opt{padding:8px 4px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;text-align:center}
+  .opt.on{border-color:var(--accent);background:rgba(200,240,96,.08);color:var(--accent)}
+  .sel{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:11px;width:100%;outline:none;cursor:pointer;transition:border-color .2s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7a90' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+  .sel:focus{border-color:var(--accent)}
+  .divider{height:1px;background:var(--border)}
+
+  .gbtn{width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#0a0a0c;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-.01em}
+  .gbtn:hover:not(:disabled){background:#d5ff6e;transform:translateY(-1px);box-shadow:0 8px 24px rgba(200,240,96,.2)}
+  .gbtn:disabled{background:var(--text3);color:var(--surface2);cursor:not-allowed}
+
+  .prog{display:none;margin-top:14px}
+  .prog.show{display:block}
+  .ptrack{height:3px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:8px}
+  .pbar{height:100%;background:var(--accent);width:0%;transition:width .5s ease;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+  .pinfo{display:flex;justify-content:space-between;font-size:10px;font-family:'DM Mono',monospace;color:var(--text2);margin-bottom:8px}
+
+  .logbox{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'DM Mono',monospace;font-size:10px;max-height:100px;overflow-y:auto;line-height:1.9}
+  .ll{display:flex;gap:8px}
+  .lt{color:var(--text3);flex-shrink:0}
+  .ok{color:var(--ok)}.err{color:var(--err)}.warn{color:var(--warn)}
+
+  .errpanel{display:none;background:rgba(255,85,102,.07);border:1px solid rgba(255,85,102,.3);border-radius:10px;padding:12px 14px;font-size:11px;font-family:'DM Mono',monospace;color:var(--err);line-height:1.8;margin-top:10px;white-space:pre-line}
+  .errpanel.show{display:block}
+  .errpanel strong{display:block;margin-bottom:4px}
+
+  .output{display:none}
+  .output.show{display:block}
+  .oimgw{border-radius:10px;overflow:hidden;border:1px solid var(--border2);background:var(--bg)}
+  .oimg{width:100%;display:block;cursor:zoom-in}
+  .oacts{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+  .abtn{padding:9px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+  .abtn:hover{border-color:var(--text2)}
+  .abtn.p{background:var(--accent);color:#0a0a0c;border-color:var(--accent)}
+  .abtn.p:hover{background:#d5ff6e}
+  .ometa{font-size:9px;font-family:'DM Mono',monospace;color:var(--text3);text-align:center;margin-top:6px}
+
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center}
+  .modal.open{display:flex}
+  .modal img{max-width:92vw;max-height:92vh;border-radius:10px}
+  .mclose{position:absolute;top:18px;right:22px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:9px 16px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text);opacity:0;transition:all .25s;z-index:999;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.ok{border-color:var(--ok)}.toast.err{border-color:var(--err)}
+
+  .extras{display:flex;gap:7px;flex-wrap:wrap}
+  .mini{width:58px;height:58px;border:1.5px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;transition:all .15s;background:var(--surface2);font-size:18px;color:var(--text3);flex-shrink:0}
+  .mini:hover{border-color:var(--accent)}
+  .mini input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .mini img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+  .minic{position:absolute;top:1px;right:1px;width:14px;height:14px;background:rgba(10,10,12,.85);border:none;border-radius:3px;color:var(--text2);font-size:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
+
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin{width:13px;height:13px;border:2px solid rgba(10,10,12,.3);border-top-color:#0a0a0c;border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0}
+  ::-webkit-scrollbar{width:3px}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+  .dbtoggle{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);cursor:pointer;text-align:center;margin-top:6px}
+  .dbtoggle:hover{color:var(--text2)}
+  .dbbox{display:none;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);max-height:120px;overflow-y:auto;margin-top:6px;word-break:break-all}
+  .dbbox.show{display:block}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">✦</div>
+    Creative Studio <span>/ Nano Banana Pro</span>
+  </div>
+  <div class="key-badge">
+    <div class="key-dot"></div>
+    API conectada via proxy
+  </div>
+</header>
+
+<main>
+  <div class="canvas">
+    <div class="heading">
+      <h1>Gerador de <em>Criativos</em> Estáticos</h1>
+      <p>Referência + Produto + Roteiro → Criativo profissional gerado por IA</p>
+    </div>
+
+    <div>
+      <div class="slbl">01 — Imagens de entrada</div>
+      <div class="imgs-grid">
+        <div>
+          <div class="uzone" id="refZone" ondragover="drag(event,'refZone')" ondragleave="undrag('refZone')" ondrop="drop(event,'ref')">
+            <span class="ubadge">Referência</span>
+            <input type="file" accept="image/*" onchange="pick(event,'ref')" id="refInput">
+            <div class="uph" id="refPh">
+              <div class="uico">🎨</div>
+              <div class="utitle">Imagem de Referência</div>
+              <div class="usub">Layout e estilo<br>que a IA vai replicar</div>
+            </div>
+            <img id="refImg" class="prev" style="display:none">
+            <button class="clrbtn" id="refClr" style="display:none" onclick="clr('ref',event)">✕</button>
+          </div>
+        </div>
+        <div>
+          <div class="uzone" id="prodZone" ondragover="drag(event,'prodZone')" ondragleave="undrag('prodZone')" ondrop="drop(event,'prod')">
+            <span class="ubadge">Produto / Sujeito</span>
+            <input type="file" accept="image/*" onchange="pick(event,'prod')" id="prodInput">
+            <div class="uph" id="prodPh">
+              <div class="uico">📦</div>
+              <div class="utitle">Imagem do Produto</div>
+              <div class="usub">Foto inserida<br>no criativo final</div>
+            </div>
+            <img id="prodImg" class="prev" style="display:none">
+            <button class="clrbtn" id="prodClr" style="display:none" onclick="clr('prod',event)">✕</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="slbl" style="margin-bottom:8px">Imagens extras (opcional, até 3)</div>
+        <div class="extras" id="extrasRow"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="slbl">02 — Roteiro / Texto do criativo</div>
+      <div class="chips">
+        <span class="chip" onclick="tpl(0,this)">🛒 E-commerce</span>
+        <span class="chip" onclick="tpl(1,this)">📣 Ads Social</span>
+        <span class="chip" onclick="tpl(2,this)">💡 Lançamento</span>
+        <span class="chip" onclick="tpl(3,this)">⭐ Review</span>
+        <span class="chip" onclick="tpl(4,this)">🔥 Oferta</span>
+        <span class="chip on" onclick="tpl(5,this)">✏️ Livre</span>
+      </div>
+      <textarea class="ta" id="script"
+        placeholder="Descreva os textos que devem aparecer no criativo. Ex: Título: 'Produto X', CTA: 'Compre Agora', rodapé com logo."
+        oninput="updatePrompt()"></textarea>
+    </div>
+
+    <div>
+      <div class="slbl">03 — Prompt enviado à IA</div>
+      <div class="pbox" id="pbox">
+        <span style="color:var(--text3)">⚡ Preencha os campos acima para visualizar</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div>
+      <div class="slbl">Configurações</div>
+
+      <div style="margin-bottom:14px">
+        <div class="slbl2">Resolução</div>
+        <div class="opts">
+          <button class="opt" onclick="so('res','1K',this)">1K</button>
+          <button class="opt on" onclick="so('res','2K',this)">2K</button>
+          <button class="opt" onclick="so('res','4K',this)">4K ✦</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div class="slbl2">Proporção</div>
+        <div class="opts" style="grid-template-columns:repeat(3,1fr)">
+          <button class="opt" onclick="so('aspect','1:1',this)">1:1</button>
+          <button class="opt on" onclick="so('aspect','4:3',this)">4:3</button>
+          <button class="opt" onclick="so('aspect','16:9',this)">16:9</button>
+          <button class="opt" onclick="so('aspect','9:16',this)">9:16</button>
+          <button class="opt" onclick="so('aspect','3:4',this)">3:4</button>
+          <button class="opt" onclick="so('aspect','21:9',this)">21:9</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div class="slbl2">Formato</div>
+        <div class="opts">
+          <button class="opt on" onclick="so('fmt','png',this)">PNG</button>
+          <button class="opt" onclick="so('fmt','jpg',this)">JPG</button>
+          <button class="opt" onclick="so('fmt','webp',this)">WebP</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div class="slbl2">Estilo visual</div>
+        <select class="sel" id="style" onchange="updatePrompt()">
+          <option value="">Automático (segue a referência)</option>
+          <option value="photorealistic, studio lighting, professional commercial photography">📸 Fotorrealista comercial</option>
+          <option value="clean flat design, bold geometric typography, graphic modern style">🎨 Flat design moderno</option>
+          <option value="luxury editorial, high contrast, cinematic dramatic lighting">🎬 Editorial luxo</option>
+          <option value="vibrant neon colors, energetic, social media trendy style">🌈 Social media vibrante</option>
+          <option value="minimalist, generous white space, elegant refined typography">⬜ Minimalista elegante</option>
+          <option value="bold retro vintage, warm color palette, textured grain overlay">🕹️ Retro / vintage</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="slbl2">Instrução extra (opcional)</div>
+        <textarea class="ta" id="extra" style="min-height:54px;font-size:11px" placeholder="Ex: fundo branco, sombra suave..." oninput="updatePrompt()"></textarea>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div>
+      <button class="gbtn" id="gbtn" onclick="generate()">
+        <span id="gicon">✦</span>
+        <span id="gtxt">Gerar Criativo</span>
+      </button>
+
+      <div class="errpanel" id="errpanel">
+        <strong id="errtitle"></strong>
+        <span id="errmsg"></span>
+      </div>
+
+      <div class="prog" id="prog">
+        <div class="ptrack"><div class="pbar" id="pbar"></div></div>
+        <div class="pinfo">
+          <span id="plbl">Aguardando...</span>
+          <span id="ppct">0%</span>
+        </div>
+        <div class="logbox" id="logbox"></div>
+        <div class="dbtoggle" onclick="document.getElementById('dbbox').classList.toggle('show')">↕ resposta bruta da API</div>
+        <div class="dbbox" id="dbbox"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="output" id="outputArea">
+      <div class="slbl">Output gerado</div>
+      <div class="oimgw">
+        <img class="oimg" id="oimg" src="" alt="Criativo gerado" onclick="openModal()">
+      </div>
+      <div class="oacts">
+        <button class="abtn p" onclick="dlImg()">⬇ Baixar HD</button>
+        <button class="abtn" onclick="cpUrl()">🔗 Copiar URL</button>
+      </div>
+      <div class="ometa" id="ometa"></div>
+    </div>
+  </div>
+</main>
+
+<div class="modal" id="modal" onclick="closeModal()">
+  <button class="mclose" onclick="closeModal()">✕</button>
+  <img id="mimg" src="" alt="">
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// Proxy routes (Vercel serverless functions)
+const API = {
+  create: '/api/createTask',
+  status: '/api/getTask',
+  upload: '/api/uploadFile',
+};
+
+const S = { ref:null, prod:null, extras:[], res:'2K', aspect:'4:3', fmt:'png', outputUrl:null };
+
+const TPLS = [
+  `Imagem de produto e-commerce profissional. Fundo limpo e neutro, produto centralizado em destaque. Textos: título em negrito com o nome do produto, benefícios como subtítulo, botão verde "Comprar Agora". Tipografia moderna e clean.`,
+  `Creative para anúncio de mídia social. Layout impactante, produto centralizado. Textos: headline chamativa no topo, benefício no centro, preço e CTA urgente na base. Paleta de cores vibrante.`,
+  `Banner de lançamento de produto. Design editorial premium. Textos: "NOVO" em destaque, nome do produto, data e "Seja o primeiro a ter". Tipografia bold, alto contraste, atmosfera de exclusividade.`,
+  `Post de review/avaliação. 5 estrelas douradas em destaque, produto à direita, avaliação positiva à esquerda. "Avaliado por clientes reais". Tom confiável e autêntico.`,
+  `Banner de oferta relâmpago. "OFERTA LIMITADA 🔥", preço DE/POR em destaque, "Só hoje!", CTA "APROVEITE AGORA". Vermelho/laranja para urgência.`,
+  ``,
+];
+
+function drag(e,id){e.preventDefault();document.getElementById(id).classList.add('drag')}
+function undrag(id){document.getElementById(id).classList.remove('drag')}
+function drop(e,t){e.preventDefault();undrag(t==='ref'?'refZone':'prodZone');const f=e.dataTransfer?.files[0];if(f)loadF(f,t)}
+function pick(e,t){const f=e.target.files[0];if(f)loadF(f,t)}
+
+function loadF(file,type){
+  if(!file.type.startsWith('image/')){toast('Apenas imagens','err');return}
+  const r=new FileReader();
+  r.onload=ev=>{
+    S[type]={b64:ev.target.result,file,name:file.name,mime:file.type};
+    if(type==='ref'||type==='prod'){
+      document.getElementById(type+'Img').src=ev.target.result;
+      document.getElementById(type+'Img').style.display='block';
+      document.getElementById(type+'Ph').style.display='none';
+      document.getElementById(type+'Clr').style.display='flex';
+      document.getElementById(type+'Zone').classList.add('filled');
+    }
+    updatePrompt();
+  };
+  r.readAsDataURL(file);
+}
+
+function clr(type,e){
+  e.stopPropagation();
+  S[type]=null;
+  document.getElementById(type+'Img').style.display='none';
+  document.getElementById(type+'Ph').style.display='flex';
+  document.getElementById(type+'Clr').style.display='none';
+  document.getElementById(type+'Zone').classList.remove('filled');
+  document.getElementById(type+'Input').value='';
+  updatePrompt();
+}
+
+function buildExtras(){
+  const row=document.getElementById('extrasRow');
+  row.innerHTML='';
+  const cnt=Math.min(S.extras.filter(Boolean).length+1,3);
+  for(let i=0;i<cnt;i++){
+    const d=document.createElement('div');d.className='mini';
+    if(S.extras[i]){
+      d.innerHTML=`<img src="${S.extras[i].b64}"><button class="minic" onclick="clrE(${i},event)">✕</button>`;
+    } else {
+      d.innerHTML=`＋<input type="file" accept="image/*" onchange="pickE(event,${i})">`;
+    }
+    row.appendChild(d);
+  }
+}
+function pickE(e,i){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{S.extras[i]={b64:ev.target.result,file:f,name:f.name,mime:f.type};buildExtras();updatePrompt()};
+  r.readAsDataURL(f);
+}
+function clrE(i,e){e.stopPropagation();S.extras.splice(i,1);buildExtras();updatePrompt()}
+buildExtras();
+
+function tpl(i,el){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('script').value=TPLS[i];
+  updatePrompt();
+}
+
+function so(key,val,btn){
+  S[key]=val;
+  btn.closest('.opts').querySelectorAll('.opt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  updatePrompt();
+}
+
+function buildPrompt(){
+  const script=document.getElementById('script').value.trim();
+  const extra=document.getElementById('extra').value.trim();
+  const style=document.getElementById('style').value;
+  const parts=[];
+  parts.push(`Crie um criativo estático de marketing profissional na proporção ${S.aspect}, resolução ${S.res}, formato ${S.fmt.toUpperCase()}.`);
+  if(S.ref) parts.push(`Use a imagem de referência enviada como base para layout, composição e estilo visual.`);
+  if(S.prod) parts.push(`Insira a imagem do produto/sujeito na composição com total fidelidade visual.`);
+  const ne=S.extras.filter(Boolean).length;
+  if(ne>0) parts.push(`Use as ${ne} imagem(ns) adicional(is) como elementos complementares.`);
+  if(script) parts.push(`Textos e roteiro: ${script}`);
+  if(style) parts.push(`Estilo visual: ${style}.`);
+  if(extra) parts.push(extra);
+  parts.push(`Resultado: imagem de alta qualidade pronta para marketing digital.`);
+  return parts.join(' ');
+}
+
+function updatePrompt(){
+  const p=buildPrompt();
+  document.getElementById('pbox').innerHTML=p
+    .replace(/(Use a imagem de referência|Insira a imagem do produto|Textos e roteiro)/g,'<span class="hi">$1</span>');
+}
+updatePrompt();
+
+// Upload via proxy
+async function uploadViaProxy(imgObj){
+  try{
+    const res=await fetch(API.upload,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({base64:imgObj.b64,filename:imgObj.name,mimeType:imgObj.mime}),
+    });
+    if(!res.ok) return null;
+    const d=await res.json();
+    return d.data?.url||d.data?.fileUrl||null;
+  }catch{return null}
+}
+
+async function generate(){
+  if(!S.ref&&!S.prod){toast('Envie pelo menos 1 imagem','err');return}
+  hideErr();setGen(true);setProg(5,'Preparando...');
+  log('Iniciando geração — Nano Banana Pro...','ok');
+  document.getElementById('outputArea').classList.remove('show');
+  document.getElementById('dbbox').textContent='';
+
+  const prompt=buildPrompt();
+  const imgs=[S.ref,S.prod,...S.extras.filter(Boolean)].filter(Boolean);
+  const imageInputs=[];
+
+  for(const img of imgs){
+    log(`Processando: ${img.name}...`,'warn');
+    const url=await uploadViaProxy(img);
+    if(url){imageInputs.push(url);log('✓ Upload OK','ok')}
+    else{imageInputs.push(img.b64);log('Usando base64 direto','warn')}
+  }
+
+  setProg(28,'Criando task...');
+
+  const body={
+    model:'nano-banana-pro',
+    input:{prompt,image_input:imageInputs,aspect_ratio:S.aspect,resolution:S.res,output_format:S.fmt},
+  };
+
+  dblog('REQUEST:\n'+JSON.stringify({...body,input:{...body.input,image_input:`[${imageInputs.length} imgs]`}},null,2));
+
+  try{
+    const res=await fetch(API.create,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body),
+    });
+    const raw=await res.text();
+    dblog('CREATE RESPONSE:\n'+raw);
+    if(!res.ok) throw new Error(`HTTP ${res.status}: ${raw.substring(0,200)}`);
+    const data=JSON.parse(raw);
+    if(data.code!==200) throw new Error(data.msg||`Erro código ${data.code}`);
+
+    const taskId=data.data?.taskId||data.data?.task_id||data.data?.id;
+    if(!taskId) throw new Error('taskId não retornado: '+raw.substring(0,200));
+
+    log(`✓ Task: ${taskId}`,'ok');
+    setProg(42,'Gerando imagem... (15-60s)');
+    await pollTask(taskId);
+
+  }catch(err){
+    log('✕ '+err.message,'err');
+    showErr('✕ Erro na API',err.message);
+    toast('Erro: '+err.message.substring(0,60),'err');
+    setGen(false);
+  }
+}
+
+async function pollTask(taskId){
+  let att=0;const max=90;
+  const poll=async()=>{
+    att++;
+    setProg(Math.min(42+(att/max)*50,93),`Aguardando... (${att*4}s)`);
+    try{
+      const res=await fetch(`${API.status}?taskId=${taskId}`);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const raw=await res.text();
+      dblog(`POLL:\n`+raw.substring(0,300));
+      const data=JSON.parse(raw);
+      const task=data.data||data;
+      const status=(task.status||task.taskStatus||task.state||'').toUpperCase();
+      log(`Status: ${status||'PENDENTE'}`,['SUCCESS','COMPLETED','DONE'].includes(status)?'ok':'warn');
+
+      if(['SUCCESS','COMPLETED','DONE'].includes(status)){
+        const out=task.output||task.outputs||task.result||task.resultUrls||task.imageUrls||[];
+        let imgUrl=null;
+        if(Array.isArray(out)&&out.length>0){const f=out[0];imgUrl=typeof f==='string'?f:(f.url||f.imageUrl);}
+        else if(typeof out==='string') imgUrl=out;
+        imgUrl=imgUrl||task.imageUrl||task.image_url||task.url;
+        dblog('FULL:\n'+JSON.stringify(task,null,2).substring(0,600));
+
+        if(imgUrl){
+          S.outputUrl=imgUrl;setProg(100,'Concluído! ✓');
+          log('✓ Criativo gerado!','ok');showOutput(imgUrl);setGen(false);
+          toast('✓ Criativo gerado!','ok');
+        } else {
+          log('Concluído mas URL não encontrada','warn');
+          showErr('⚠️ Gerado sem URL','Verifique em kie.ai/logs e o painel de debug abaixo.');
+          setGen(false);
+        }
+      } else if(['FAILED','ERROR','FAIL'].includes(status)){
+        const em=task.errorMsg||task.message||'Erro desconhecido';
+        log('✕ '+em,'err');showErr('✕ Geração falhou',em);setGen(false);
+      } else {
+        if(att<max) setTimeout(poll,4000);
+        else{log('✕ Timeout (6 min)','err');setGen(false)}
+      }
+    }catch(err){
+      if(att<max) setTimeout(poll,4000);
+      else{log('✕ '+err.message,'err');setGen(false)}
+    }
+  };
+  setTimeout(poll,3000);
+}
+
+function showOutput(url){
+  document.getElementById('oimg').src=url;
+  document.getElementById('mimg').src=url;
+  document.getElementById('ometa').textContent=`${S.res} · ${S.aspect} · ${S.fmt.toUpperCase()} · ${new Date().toLocaleTimeString('pt-BR')}`;
+  document.getElementById('outputArea').classList.add('show');
+  document.getElementById('outputArea').scrollIntoView({behavior:'smooth'});
+}
+function dlImg(){
+  if(!S.outputUrl)return;
+  const a=document.createElement('a');a.href=S.outputUrl;
+  a.download=`criativo-${Date.now()}.${S.fmt}`;a.target='_blank';
+  document.body.appendChild(a);a.click();a.remove();
+}
+function cpUrl(){if(!S.outputUrl)return;navigator.clipboard.writeText(S.outputUrl).then(()=>toast('URL copiada!','ok'))}
+function openModal(){if(S.outputUrl)document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+
+function setGen(on){
+  document.getElementById('gbtn').disabled=on;
+  document.getElementById('prog').classList.toggle('show',on);
+  if(on){
+    document.getElementById('gicon').outerHTML='<div class="spin" id="gicon"></div>';
+    document.getElementById('gtxt').textContent='Gerando...';
+  } else {
+    const el=document.getElementById('gicon');
+    if(el) el.outerHTML='<span id="gicon">✦</span>';
+    document.getElementById('gtxt').textContent='Gerar Criativo';
+  }
+}
+function setProg(pct,lbl){
+  document.getElementById('pbar').style.width=pct+'%';
+  document.getElementById('plbl').textContent=lbl;
+  document.getElementById('ppct').textContent=Math.round(pct)+'%';
+}
+function log(msg,type=''){
+  const box=document.getElementById('logbox');
+  const t=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const d=document.createElement('div');d.className='ll';
+  d.innerHTML=`<span class="lt">${t}</span><span class="${type}">${msg}</span>`;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function dblog(msg){const b=document.getElementById('dbbox');b.textContent+=msg+'\n\n';b.scrollTop=b.scrollHeight}
+function showErr(title,msg){document.getElementById('errtitle').textContent=title;document.getElementById('errmsg').textContent=msg;document.getElementById('errpanel').classList.add('show')}
+function hideErr(){document.getElementById('errpanel').classList.remove('show')}
+let _tt;
+function toast(msg,type=''){
+  const el=document.getElementById('toast');el.textContent=msg;
+  el.className=`toast ${type} show`;
+  clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>
